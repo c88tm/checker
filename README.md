@@ -14,3 +14,4 @@ Where **player_num** is the number that indicates the player on chess board\
 In each round, player should read inputs from `board.txt` and outputs to **AI#**.txt
 
 c88tm:3
+Iotalh:3333333333333
