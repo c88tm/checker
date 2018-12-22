@@ -8,11 +8,13 @@
 using namespace std;
 #define MAX_BUF 65535
 #define MAX_PATH_LENGTH 200
+#define EMPTY 1
 
 string ai_cmd[2];
 
 int call_pl(int i);//calling player
 void cls(HANDLE hConsole);
+
 
 int board_2[17][17] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0},
@@ -38,16 +40,31 @@ class Point{
     public:
     int x, y;
     Point(int x = 0, int y = 0) : x(x), y(y) {}
+    Point& operator=( const Point& p){
+        this->x = p.x;
+        this->y = p.y;
+        return *this;
+    }
     Point operator+( const Point& p){
         Point tmp;
         tmp.x = this->x + p.x;
         tmp.y = this->y + p.y;
         return tmp;
     }
-    Point& operator=( const Point& p){
-        this->x = p.x;
-        this->y = p.y;
-        return *this;
+    Point operator-( const Point& p){
+        Point tmp;
+        tmp.x = this->x - p.x;
+        tmp.y = this->y - p.y;
+        return tmp;
+    }
+    Point& operator*( const int& c){
+        Point tmp;
+        tmp.x = this->x * c;
+        tmp.y = this->y * c;
+        return tmp;
+    }
+    friend bool operator==(const Point& lhs, const Point& rhs){
+        return (lhs.x == rhs.x) && (lhs.y == rhs.y);
     }
     friend ostream & operator << (ostream &out, const Point &p)
     {
@@ -55,6 +72,7 @@ class Point{
         return out;
     }
 };
+Point dir[6] = {{0, -1}, {1, -1}, {1, 0}, {0, 1}, {-1, 1}, {-1, 0}};
 
 class Move{
     public:
@@ -141,106 +159,113 @@ class Board{
         fclose(f);
     }
 
-    int isMoveable(pair<int, int> p, pair<int, int>dest){
-        if(p.first < 0 || p.first >= 17 || p.second < 0 || p.second >= 17 || dest.first < 0 || dest.first >= 17 || dest.second < 0 || dest.second >= 17)return 0;
-        if(board[p.first][p.second] <= 1 || board[dest.first][dest.second] != 1)return 0;
-        int x = p.first - dest.first;
-        int y = p.second - dest.second;
-        if(abs(x) <= 1 && abs(y) <= 1 && abs(x+y) != 2)return 1;
-        return 0;
+    int inRange(Point p){
+        if(p.x < 0 || p.x >= 17 || p.y < 0 || p.y >= 17 )return 0;
+        return 1;
     }
 
-    int isHoppable(pair<int, int> p, pair<int, int>dest){
-        if(p.first < 0 || p.first >= 17 || p.second < 0 || p.second >= 17 || dest.first < 0 || dest.first >= 17 || dest.second < 0 || dest.second >= 17)return 0;
-        if(board[p.first][p.second] <= 1 || board[dest.first][dest.second] != 1)return 0;
-        int x = p.first - dest.first;
-        int y = p.second - dest.second;
-        if(x != 0 && x != 2 && x != -2) return 0;
-        if(y != 0 && y != 2 && y != -2) return 0;
-        if(abs(x+y) != 4 && board[(p.first + dest.first) / 2][(p.second + dest.second) / 2] > 1 )return 1;
-        return 0;
-    }
-
-    int Move(pair<int, int> p, pair<int, int> dest[], int moves){
-        pair<int, int> cur = p;
-        int check = 1;
-        if (moves == 1){
-            if(isMoveable(p, dest[0])){
-                board[dest[0].first][dest[0].second] = board[p.first][p.second];
-                board[p.first][p.second] = 1;
-                return 1;
-            }
+    int isMoveable(Point p, Point dest){
+        if(!inRange(p) || !inRange(dest))return 0;
+        if(board[p.x][p.y] <= EMPTY || board[dest.x][dest.y] != EMPTY)return 0;
+        Point diff = p - dest;
+        for(int i = 0; i < 6; i++){
+            if(diff == dir[i])return 1;
         }
-        for(int i = 0; i < moves; i++){
-            if(isHoppable(cur, dest[i])){
-                cur = dest[i];
+        return 0;
+    }
+
+    int isHoppable(Point p, Point dest){
+        if(!inRange(p) || !inRange(dest))return 0;
+        if(board[p.x][p.y] <= EMPTY || board[dest.x][dest.y] != EMPTY)return 0;
+        Point diff = p - dest;
+        for(int i = 0; i < 6; i++){
+            if(diff == dir[i] * 2)return 1;
+        }
+        return 0;
+    }
+
+    void moveChecker(Point p, Point dest){
+        if(p == dest)return;
+        board[dest.x][dest.y] = board[p.x][p.y];
+        board[p.x][p.y] = 1;
+        return;
+    }
+
+    int makeMove(Move m){
+        //If is Moving
+        if (m.steps == 1 && isMoveable(m.start, m.path[0])){
+            moveChecker(m.start, m.path[0]);
+            return 1;
+        }
+        //If is Hopping
+        Point cur_pos = m.start;
+        for(int i = 0; i < m.steps; i++){
+            if( isHoppable( cur_pos, m.path[i] ) ){
+                moveChecker( cur_pos, m.path[i] );
+                cur_pos = m.path[i];
             }else{
-                check = 0;
-                break;
+                moveChecker(cur_pos, m.start);
+                return 0;
             }
         }
-        if(check){
-            board[dest[moves-1].first][dest[moves-1].second] = board[p.first][p.second];
-            board[p.first][p.second] = 1;
-        }
-        return 0;
+        return 1;
     }
 };
 
-Point dir[6] = {{0, -1}, {1, -1}, {1, 0}, {0, 1}, {-1, 1}, {-1, 0}};
 
 int main(int argc, char *argv[]){
 
     //Setup proc relative stuff.
 
-    string path, filename;
-    string::size_type pos = string(argv[0]).find_last_of( "\\/" );
-    filename = string(argv[0]).substr(pos + 1);
-    path = string(argv[0]).substr(0, pos);
+    // string path, filename;
+    // string::size_type pos = string(argv[0]).find_last_of( "\\/" );
+    // filename = string(argv[0]).substr(pos + 1);
+    // path = string(argv[0]).substr(0, pos);
 
-    if(argc != 3){
-        printf("\nUsage: .\\%s <AI1> <AI2>\n", filename.c_str());
-        printf("Both AI.exes should be kept within the same folder\n");
-        printf("Server will call <AI#>.exe with \".\\<AI#>.exe <player_num>\"\n");
-        printf("Where <player_num> is the number that indicates the player on chess board\n");
-        printf("In each round, player should read inputs from board.txt and outputs to <AI#>.txt\n");
-        return 0;
-    }
-    for(int i = 0; i < 2; i++){
-        ai_cmd[i] = path + "\\" + argv[i + 1] + " " + to_string(i+2);
-    }
+    // if(argc != 3){
+    //     printf("\nUsage: .\\%s <AI1> <AI2>\n", filename.c_str());
+    //     printf("Both AI.exes should be kept within the same folder\n");
+    //     printf("Server will call <AI#>.exe with \".\\<AI#>.exe <player_num>\"\n");
+    //     printf("Where <player_num> is the number that indicates the player on chess board\n");
+    //     printf("In each round, player should read inputs from board.txt and outputs to <AI#>.txt\n");
+    //     return 0;
+    // }
+    // for(int i = 0; i < 2; i++){
+    //     ai_cmd[i] = path + "\\" + argv[i + 1] + " " + to_string(i+2);
+    // }
 
-    //Setup of printing
-    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-    WORD wOldColorAttrs;
-    CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
-    COORD coordScreen = {0, 0};
-    SetConsoleCursorPosition(h, coordScreen);    
+    // //Setup of printing
+    // HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    // WORD wOldColorAttrs;
+    // CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+    // COORD coordScreen = {0, 0};
+    // SetConsoleCursorPosition(h, coordScreen);    
 
-    GetConsoleScreenBufferInfo(h, &csbiInfo);
-    wOldColorAttrs = csbiInfo.wAttributes;
+    // GetConsoleScreenBufferInfo(h, &csbiInfo);
+    // wOldColorAttrs = csbiInfo.wAttributes;
 
-    // Board
-    Board board = Board();
-    //Round
-    int round = 0, winner = -1;
-    for(;winner == -1;round++){
-        cls(h);
-        board.writeToFile("board.txt");
-        board.print();
-        printf("Round %d, calling player %d",round, round % 2 + 2);
-        int ret = call_pl(round % 2);
-        if(ret != 0){
-            printf("error occur or player timeout, skip this move.");
-            continue;
-        }
-        // Move move = Move.readMoveFromFile(to_string(i+2) + ".txt");//TODO
-        // if(!board.Move(move)){//TODO
-        //     printf("Move illegal!\n");
-        //     winner = !(round%2);
-        // }
-        // winner = board.winner();//TODO
-    }
+    // // Board
+    // Board board = Board();
+    // //Round
+    // int round = 0, winner = -1;
+    // for(;winner == -1;round++){
+    //     cls(h);
+    //     board.writeToFile("board.txt");
+    //     board.print();
+    //     printf("Round %d, calling player %d",round, round % 2 + 2);
+    //     int ret = call_pl(round % 2);
+    //     if(ret != 0){
+    //         printf("error occur or player timeout, skip this move.");
+    //         continue;
+    //     }
+    //     // Move move = Move.readMoveFromFile(to_string(i+2) + ".txt");//TODO
+    //     // if(!board.Move(move)){//TODO
+    //     //     printf("Move illegal!\n");
+    //     //     winner = !(round%2);
+    //     // }
+    //     // winner = board.winner();//TODO
+    // }
+    // printf("%d", Point(2,3) == Point(2,4));
     
     return 0;
 }
