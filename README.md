@@ -63,3 +63,6 @@ Server will execute client like:
 ```
 
 client should read from `board.txt` and outputs its move to `s1071226.txt` within a minute.
+
+c88tm:3\
+Iotalh:3333333333333
