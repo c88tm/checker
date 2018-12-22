@@ -120,6 +120,7 @@ Move readMoveFromFile(string filename){
         fscanf(f, "%d %d", &tmpx, &tmpy);
         ret.path[i] = Point(tmpx, tmpy);
     }
+    fclose(f);
     return ret;
 }
 
@@ -280,6 +281,7 @@ int main(int argc, char *argv[]){
     Board board = Board();
     //Round
     int round = 0, winner = -1;
+    cls(h);
     for(;winner == -1;round++){
         int player = round % 2 + 2;//2 or 3
         cls(h);
@@ -295,11 +297,11 @@ int main(int argc, char *argv[]){
         cout << move << '\n';
         if(!board.makeMove(move, player)){
             printf("Move illegal!\n");
-            // winner = player;
-            // break;
+            winner = player;
+            break;
         }
         if((winner = board.isWinner(player)) != -1)break;
-        Sleep(2000);
+        Sleep(500);
     }
     cout << "Winner is " << pl_name[winner - 2];
     return 0;
@@ -309,7 +311,7 @@ int call_pl(int i){
     int ret;
     STARTUPINFO info={sizeof(info)};
     PROCESS_INFORMATION pi;
-    LPSTR s = const_cast<LPSTR>(pl_cmd[0].c_str());
+    LPSTR s = const_cast<LPSTR>(pl_cmd[i].c_str());
     if (CreateProcess(NULL, s, NULL, NULL, TRUE, 0, NULL, NULL, &info, &pi))
     {
         ret = WaitForSingleObject(pi.hProcess, WAIT_TIME);
