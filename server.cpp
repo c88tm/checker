@@ -9,8 +9,10 @@ using namespace std;
 #define MAX_BUF 65535
 #define MAX_PATH_LENGTH 200
 #define EMPTY 1
+#define WAIT_TIME 6000
 
-string ai_cmd[2];
+string pl_cmd[2];
+string pl_name[2];
 
 int call_pl(int i);//calling player
 void cls(HANDLE hConsole);
@@ -57,7 +59,7 @@ class Point{
         tmp.y = this->y - p.y;
         return tmp;
     }
-    Point& operator*( const int& c){
+    Point operator*( const int& c){
         Point tmp;
         tmp.x = this->x * c;
         tmp.y = this->y * c;
@@ -79,7 +81,7 @@ class Move{
     Point start;
     Point path[MAX_PATH_LENGTH];
     int steps;
-    Move(Point start, Point *path, int steps) : start(start), steps(steps){
+    Move(Point start = Point(0, 0), Point *path = NULL, int steps = 0) : start(start), steps(steps){
         for(int i = 0; i < steps; i++){
             this->path[i] = path[i];
         }
@@ -92,8 +94,7 @@ class Move{
         }
         return *this;
     }
-    friend ostream & operator << (ostream &out, const Move &m)
-    {
+    friend ostream & operator << (ostream &out, const Move &m){
         out << "Start: " << m.start;
         for(int i = 0; i < m.steps; i++){
             out << " -> " << m.path[i];
@@ -108,13 +109,33 @@ class Move{
     }
 };
 
+Move readMoveFromFile(string filename){
+    FILE *f = fopen(filename.c_str(),"r");
+    Move ret = Move();
+    fscanf(f, "%d", &ret.steps);
+    int tmpx, tmpy;
+    fscanf(f, "%d %d", &tmpx, &tmpy);
+    ret.start = Point(tmpx, tmpy);
+    for(int i = 0; i < ret.steps; i++){
+        fscanf(f, "%d %d", &tmpx, &tmpy);
+        ret.path[i] = Point(tmpx, tmpy);
+    }
+    return ret;
+}
+
 class Board{
     public:
     int board[17][17];
+    Point goal[2][15];
     Board(){
+        int goal_num[2]={0};
         for(int i = 0; i < 17; i++)
-        for(int j = 0; j < 17; j++)
+        for(int j = 0; j < 17; j++){
             this->board[i][j] = board_2[i][j];
+            if(board_2[i][j] > 1){
+                goal[3 - board_2[i][j]][goal_num[3 - board_2[i][j]]++] = Point(i,j);
+            }
+        }
     }
 
     void print(){
@@ -191,7 +212,8 @@ class Board{
         return;
     }
 
-    int makeMove(Move m){
+    int makeMove(Move m, int player){
+        if(player != board[m.start.x][m.start.y])return 0;
         //If is Moving
         if (m.steps == 1 && isMoveable(m.start, m.path[0])){
             moveChecker(m.start, m.path[0]);
@@ -210,6 +232,14 @@ class Board{
         }
         return 1;
     }
+
+    int isWinner(int player){
+        for(int i = 0; i < 15; i++){
+            Point g = goal[player - 2][i];
+            if(board[g.x][g.y] != player)return -1;
+        }
+        return player;
+    }
 };
 
 
@@ -217,56 +247,61 @@ int main(int argc, char *argv[]){
 
     //Setup proc relative stuff.
 
-    // string path, filename;
-    // string::size_type pos = string(argv[0]).find_last_of( "\\/" );
-    // filename = string(argv[0]).substr(pos + 1);
-    // path = string(argv[0]).substr(0, pos);
+    string path, filename;
+    string::size_type pos = string(argv[0]).find_last_of( "\\/" );
+    filename = string(argv[0]).substr(pos + 1);
+    path = string(argv[0]).substr(0, pos);
 
-    // if(argc != 3){
-    //     printf("\nUsage: .\\%s <AI1> <AI2>\n", filename.c_str());
-    //     printf("Both AI.exes should be kept within the same folder\n");
-    //     printf("Server will call <AI#>.exe with \".\\<AI#>.exe <player_num>\"\n");
-    //     printf("Where <player_num> is the number that indicates the player on chess board\n");
-    //     printf("In each round, player should read inputs from board.txt and outputs to <AI#>.txt\n");
-    //     return 0;
-    // }
-    // for(int i = 0; i < 2; i++){
-    //     ai_cmd[i] = path + "\\" + argv[i + 1] + " " + to_string(i+2);
-    // }
+    if(argc != 3){
+        printf("\nUsage: .\\%s <AI1> <AI2>\n", filename.c_str());
+        printf("Both AI.exes should be kept within the same folder\n");
+        printf("Server will call <AI#>.exe with \".\\<AI#>.exe <player_num>\"\n");
+        printf("Where <player_num> is the number that indicates the player on chess board\n");
+        printf("In each round, player should read inputs from board.txt and outputs to <AI#>.txt\n");
+        return 0;
+    }
+    for(int i = 0; i < 2; i++){
+        pl_cmd[i] = path + "\\" + argv[i + 1] + " " + to_string(i+2);
+        pl_name[i] = string(argv[i + 1]);
+        cout << pl_cmd[i];
+    }
 
-    // //Setup of printing
-    // HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-    // WORD wOldColorAttrs;
-    // CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
-    // COORD coordScreen = {0, 0};
-    // SetConsoleCursorPosition(h, coordScreen);    
+    //Setup of printing
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    WORD wOldColorAttrs;
+    CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+    COORD coordScreen = {0, 0};
+    SetConsoleCursorPosition(h, coordScreen);    
 
-    // GetConsoleScreenBufferInfo(h, &csbiInfo);
-    // wOldColorAttrs = csbiInfo.wAttributes;
+    GetConsoleScreenBufferInfo(h, &csbiInfo);
+    wOldColorAttrs = csbiInfo.wAttributes;
 
-    // // Board
-    // Board board = Board();
-    // //Round
-    // int round = 0, winner = -1;
-    // for(;winner == -1;round++){
-    //     cls(h);
-    //     board.writeToFile("board.txt");
-    //     board.print();
-    //     printf("Round %d, calling player %d",round, round % 2 + 2);
-    //     int ret = call_pl(round % 2);
-    //     if(ret != 0){
-    //         printf("error occur or player timeout, skip this move.");
-    //         continue;
-    //     }
-    //     // Move move = Move.readMoveFromFile(to_string(i+2) + ".txt");//TODO
-    //     // if(!board.Move(move)){//TODO
-    //     //     printf("Move illegal!\n");
-    //     //     winner = !(round%2);
-    //     // }
-    //     // winner = board.winner();//TODO
-    // }
-    // printf("%d", Point(2,3) == Point(2,4));
-    
+    // Board
+    Board board = Board();
+    //Round
+    int round = 0, winner = -1;
+    for(;winner == -1;round++){
+        int player = round % 2 + 2;//2 or 3
+        cls(h);
+        board.writeToFile("board.txt");
+        board.print();
+        printf("Round %d, calling player %d\n======\n",round, player);
+        int ret = call_pl(player - 2);
+        if(ret != 0){
+            printf("skip this move.\n");
+            continue;
+        }
+        Move move = readMoveFromFile(pl_name[player - 2] + ".txt");
+        cout << move << '\n';
+        if(!board.makeMove(move, player)){
+            printf("Move illegal!\n");
+            // winner = player;
+            // break;
+        }
+        if((winner = board.isWinner(player)) != -1)break;
+        Sleep(2000);
+    }
+    cout << "Winner is " << pl_name[winner - 2];
     return 0;
 }
 
@@ -274,16 +309,17 @@ int call_pl(int i){
     int ret;
     STARTUPINFO info={sizeof(info)};
     PROCESS_INFORMATION pi;
-    LPSTR s = const_cast<LPSTR>(ai_cmd[0].c_str());
+    LPSTR s = const_cast<LPSTR>(pl_cmd[0].c_str());
     if (CreateProcess(NULL, s, NULL, NULL, TRUE, 0, NULL, NULL, &info, &pi))
     {
-        ret = WaitForSingleObject(pi.hProcess, 3000);
+        ret = WaitForSingleObject(pi.hProcess, WAIT_TIME);
+        printf("\n======\n");
         if(ret == 0){
-            printf("player returned a move.\n");
+            // printf("player returned a move.\n");
         }else if(ret == 0x102){
             printf("player timed out.\n");
         }else{
-            printf("something went wrong. server closing\n");
+            printf("something went wrong.\n");
         }
         TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hProcess);
