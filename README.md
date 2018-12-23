@@ -64,5 +64,14 @@ Server will execute client like:
 
 client should read from `board.txt` and outputs its move to `s1071226.txt` within a minute.
 
+### For a short demo
+
+```cmd
+g++ baseAI.cpp -o baseAI1
+g++ baseAI.cpp -o baseAI2
+g++ server.cpp -o server
+.\server baseAI1 baseAI2
+```
+
 c88tm:3\
 Iotalh:3333333333333
