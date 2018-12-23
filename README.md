@@ -59,7 +59,7 @@ In each round, player should read inputs from `board.txt` and outputs to **AI#**
 Server will execute client like:
 
 ```cmd
-.\s1071226.exe 3
+.\s1072026.exe 3
 ```
 
 client should read from `board.txt` and outputs its move to `s1071226.txt` within a minute.
