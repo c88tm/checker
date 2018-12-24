@@ -62,7 +62,7 @@ Server will execute client like:
 .\s1072026.exe 3
 ```
 
-client should read from `board.txt` and outputs its move to `s1071226.txt` within a minute.
+client should read from `board.txt` and outputs its move to `s1072026.txt` within a minute.
 
 ### For a short demo
 
