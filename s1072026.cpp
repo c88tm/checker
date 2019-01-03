@@ -7,12 +7,12 @@
 using namespace std;
 void read(); // 讀檔
 void find_p(); // 找到要跳的座標
-int distance(); // 計算距離
+int distance(struct place a); // 計算距離
 void output(); // 輸出
 int color; // 玩家顏色
 const int N = 17;
 int b[N][N]; // 儲存每個座標的值 (eg. 空地、玩家棋子)
-int index; // 棋子編號
+int index, direction, score; // 棋子編號
 int fin_index;
 int fin_dir;
 int fin_score = -100;
@@ -21,11 +21,10 @@ struct place // (x,y)
 	int x;
 	int y;
 };
-struct place find_pos[4]; // 找到可能可以跳的座標
+struct place find_pos; // 找到可能可以跳的座標
 struct place pos[15]; // 原始座標
 struct place new_pos; // 可以走到的座標
 struct place fin_pos; // 經過比較之後，確定要走的
-struct place 
 struct place target; // 終點
 int main(int argc, char *argv[])
 {
@@ -83,7 +82,6 @@ void find_p()
 		direction = rand() % 6;
 		int dir_x[6] = {0, 1, 1, 0, -1, -1};
 		int dir_y[6] = {-1, -1, 0, 1, 1, 0};
-		dir_x[direction]
 
 		find_pos.x = (pos[index].x + dir_x[direction]);
 		find_pos.y = (pos[index].y + dir_y[direction]);
@@ -99,14 +97,15 @@ void find_p()
 			}
 		}
 
-		int distance(struct place a){
-			int d;
-			d = ((a.x - target.x)*(a.x - target.x)) + ((a.y - target.y)*(a.y - target.y));
-			return d;
-		}
+		
 
 	}
-
+}
+int distance(struct place a){
+	int d;
+	d = ((a.x - target.x)*(a.x - target.x)) + ((a.y - target.y)*(a.y - target.y));
+	return d;
+}
 void output()
 {
 	ofstream s1072026;
