@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <ctime>
+#include <chrono>
+
 using namespace std;
 void read(); // 讀檔
 void find_p(); // 找到要跳的座標
@@ -71,7 +73,11 @@ void read()
 
 void find_p()
 {
-	while(還有時間){
+	auto start = std::chrono::system_clock::now();
+	while(true){
+		auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end-start;
+        if(elapsed_seconds.count() > 20) break;//跑個20秒鐘 就出去
 		srand(time(NULL));
 		index = rand() % 15;
 		direction = rand() % 6;
