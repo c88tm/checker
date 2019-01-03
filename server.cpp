@@ -11,8 +11,10 @@ using namespace std;
 #define EMPTY 1
 #define WAIT_TIME 6000
 
-string pl_cmd[2];
-string pl_name[2];
+string pl_cmd[3];
+string pl_name[3];
+
+int players;
 
 int call_pl(int i);//calling player
 void cls(HANDLE hConsole);
@@ -36,6 +38,26 @@ int board_2[17][17] = {
     {0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+
+int board_3[17][17] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 3, 1, 1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0},
+    {0, 0, 0, 3, 3, 1, 1, 1, 1, 1, 1, 4, 4, 0, 0, 0, 0},
+    {0, 0, 3, 3, 3, 1, 1, 1, 1, 1, 4, 4, 4, 0, 0, 0, 0},
+    {0, 3, 3, 3, 3, 1, 1, 1, 1, 4, 4, 4, 4, 0, 0, 0, 0},
+    {3, 3, 3, 3, 3, 1, 1, 1, 4, 4, 4, 4, 4, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 class Point{
@@ -127,16 +149,24 @@ Move readMoveFromFile(string filename){
 class Board{
     public:
     int board[17][17];
-    Point goal[2][15];
-    Board(){
-        int goal_num[2]={0};
-        for(int i = 0; i < 17; i++)
-        for(int j = 0; j < 17; j++){
-            this->board[i][j] = board_2[i][j];
-            if(board_2[i][j] > 1){
-                goal[3 - board_2[i][j]][goal_num[3 - board_2[i][j]]++] = Point(i,j);
+    Point goal[3][15];
+    Board(int pl_num){
+        int goal_num[3]={0};
+        if(pl_num == 2){
+            for(int i = 0; i < 17; i++)
+            for(int j = 0; j < 17; j++){
+                this->board[i][j] = board_2[i][j];
+                if(board_2[i][j] > 1){
+                    goal[3 - board_2[i][j]][goal_num[3 - board_2[i][j]]++] = Point(i,j);
+                }
+            }
+        }else{
+            for(int i = 0; i < 17; i++)
+            for(int j = 0; j < 17; j++){
+                this->board[i][j] = board_3[i][j];
             }
         }
+        
     }
 
     void print(){
@@ -253,18 +283,19 @@ int main(int argc, char *argv[]){
     filename = string(argv[0]).substr(pos + 1);
     path = string(argv[0]).substr(0, pos);
 
-    if(argc != 3){
-        printf("\nUsage: .\\%s <AI1> <AI2>\n", filename.c_str());
-        printf("Both AI.exes should be kept within the same folder\n");
+    if(argc < 3 || argc > 4){
+        printf("\nUsage: .\\%s <AI1> <AI2> [<AI3>]\n", filename.c_str());
+        printf("All AI.exes should be kept within the same folder\n");
         printf("Server will call <AI#>.exe with \".\\<AI#>.exe <player_num>\"\n");
         printf("Where <player_num> is the number that indicates the player on chess board\n");
         printf("In each round, player should read inputs from board.txt and outputs to <AI#>.txt\n");
         return 0;
     }
-    for(int i = 0; i < 2; i++){
+    players = argc - 1;
+    for(int i = 0; i < players; i++){
         pl_cmd[i] = path + "\\" + argv[i + 1] + " " + to_string(i+2);
         pl_name[i] = string(argv[i + 1]);
-        cout << pl_cmd[i];
+        cout << pl_cmd[i] << '\n';
     }
 
     //Setup of printing
@@ -276,15 +307,17 @@ int main(int argc, char *argv[]){
 
     GetConsoleScreenBufferInfo(h, &csbiInfo);
     wOldColorAttrs = csbiInfo.wAttributes;
-
+    cls(h);
     // Board
-    Board board = Board();
+    Board board = Board(players);
     //Round
-    int round = 0, winner = -1;
+    int round = 0, winner = -1, err = 0;
     cls(h);
     for(;winner == -1;round++){
-        int player = round % 2 + 2;//2 or 3
+        int player = round % 3 + 2;//2 or 3
         cls(h);
+        printf("Round %d, calling player %d\n======\n",round, player);
+
         board.writeToFile("board.txt");
         board.print();
         printf("Round %d, calling player %d\n======\n",round, player);
@@ -298,12 +331,15 @@ int main(int argc, char *argv[]){
         if(!board.makeMove(move, player)){
             printf("Move illegal!\n");
             winner = player;
+            err = 1;
             break;
         }
         if((winner = board.isWinner(player)) != -1)break;
         Sleep(500);
     }
-    cout << "Winner is " << pl_name[winner - 2];
+    if(!err){
+        cout << "Winner is " << pl_name[winner - 2]; 
+    }
     return 0;
 }
 
