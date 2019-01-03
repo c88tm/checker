@@ -92,7 +92,7 @@ void find_p()
 		find_pos[5].x = (pos[index].x + 1);
 		find_pos[5].y = (pos[index].y - 1);
 
-	}while((b[find_pos[0].x][find_pos[0].y] != 1 && b[find_pos[1].x][find_pos[1].y] != 1 && b[find_pos[2].x][find_pos[2].y] != 1 && b[find_pos[3].x][find_pos[3].y] != 1));
+	}while(b[find_pos[0].x][find_pos[0].y] != 1 && b[find_pos[1].x][find_pos[1].y] != 1 && b[find_pos[2].x][find_pos[2].y] != 1 && b[find_pos[3].x][find_pos[3].y] != 1 && b[find_pos[4].x][find_pos[4].y] != 1 && b[find_pos[5].x][find_pos[5].y] != 1 );
 	
 	for(int i = 0; i<6; i++){
 		if(find_pos[i].x >= 0 && find_pos[i].y >= 0 && find_pos[i].x < 17 && find_pos[i].y < 17) {
