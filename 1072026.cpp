@@ -12,10 +12,10 @@ int k = 0; // 棋子編號
 const int N = 17;
 int b[N][N]; // 儲存每個座標的值 (eg. 空地、玩家棋子)
 int index; // 棋子編號
-struct place // (y,x)
+struct place // (x,y)
 {
-	int y;
 	int x;
+	int y;
 };
 struct place find_pos[4]; // 找到可能可以跳的座標
 struct place pos[15]; // 原始座標
@@ -74,7 +74,7 @@ void find_p()
 		index = rand() % 15; // 從0~14號棋子隨機選一顆
 		// cout << index << endl;
 		// cout << "(" << pos[index].x << "," << pos[index].y << ")" << endl;
-		find_pos[0].x = (pos[index].x - 1); // 往旁邊找或許能走的  位置
+		find_pos[0].x = (pos[index].x - 1); // 往旁邊找或許能走的位置
 		find_pos[0].y = (pos[index].y);
 
 		find_pos[1].x = (pos[index].x - 1);
@@ -92,11 +92,11 @@ void find_p()
 		find_pos[5].x = (pos[index].x + 1);
 		find_pos[5].y = (pos[index].y - 1);
 
-	}while((b[find_pos[0].y][find_pos[0].x] != 1 && b[find_pos[1].y][find_pos[1].x] != 1 && b[find_pos[2].y][find_pos[2].x] != 1 && b[find_pos[3].y][find_pos[3].x] != 1));
+	}while((b[find_pos[0].x][find_pos[0].y] != 1 && b[find_pos[1].x][find_pos[1].y] != 1 && b[find_pos[2].x][find_pos[2].y] != 1 && b[find_pos[3].x][find_pos[3].y] != 1));
 	
-	for(int i = 0; i<4; i++){
+	for(int i = 0; i<6; i++){
 		if(find_pos[i].x >= 0 && find_pos[i].y >= 0 && find_pos[i].x < 17 && find_pos[i].y < 17) {
-			if(b[find_pos[i].y][find_pos[i].x] == 1){
+			if(b[find_pos[i].x][find_pos[i].y] == 1){
 				new_pos.x = find_pos[i].x;
 				new_pos.y = find_pos[i].y;
 				int n = distance();
@@ -106,13 +106,7 @@ void find_p()
 					fin_pos.x = new_pos.x;
 					fin_pos.y = new_pos.y;
 				}
-
 			}
-			else{
-
-
-			}
-
 		}
 	}
 }
