@@ -20,7 +20,8 @@ int call_pl(int i);//calling player
 void cls(HANDLE hConsole);
 
 
-int board_2[17][17] = {
+int board_init[2][17][17] = {
+{
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0},
@@ -38,9 +39,7 @@ int board_2[17][17] = {
     {0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
-
-int board_3[17][17] = {
+}, {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0},
@@ -58,7 +57,7 @@ int board_3[17][17] = {
     {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+}};
 
 class Point{
     public:
@@ -152,19 +151,9 @@ class Board{
     Point goal[3][15];
     Board(int pl_num){
         int goal_num[3]={0};
-        if(pl_num == 2){
-            for(int i = 0; i < 17; i++)
-            for(int j = 0; j < 17; j++){
-                this->board[i][j] = board_2[i][j];
-                if(board_2[i][j] > 1){
-                    goal[3 - board_2[i][j]][goal_num[3 - board_2[i][j]]++] = Point(i,j);
-                }
-            }
-        }else{
-            for(int i = 0; i < 17; i++)
-            for(int j = 0; j < 17; j++){
-                this->board[i][j] = board_3[i][j];
-            }
+        for(int i = 0; i < 17; i++)
+        for(int j = 0; j < 17; j++){
+            this->board[i][j] = board_init[pl_num - 2][i][j];
         }
         
     }
@@ -313,12 +302,10 @@ int main(int argc, char *argv[]){
     //Round
     int round = 0, winner = -1, err = 0;
     cls(h);
+    board.writeToFile("board.txt");
     for(;winner == -1;round++){
         int player = round % 3 + 2;//2 or 3
         cls(h);
-        printf("Round %d, calling player %d\n======\n",round, player);
-
-        board.writeToFile("board.txt");
         board.print();
         printf("Round %d, calling player %d\n======\n",round, player);
         int ret = call_pl(player - 2);
@@ -335,6 +322,7 @@ int main(int argc, char *argv[]){
             break;
         }
         if((winner = board.isWinner(player)) != -1)break;
+        board.writeToFile("board.txt");
         Sleep(500);
     }
     if(!err){

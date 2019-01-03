@@ -16,6 +16,8 @@ int index, direction, score; // 棋子編號
 int fin_index;
 int fin_dir;
 int fin_score = -100;
+int dir_x[6] = {0, 1, 1, 0, -1, -1};
+int dir_y[6] = {-1, -1, 0, 1, 1, 0};
 struct place // (x,y)
 {
 	int x;
@@ -80,8 +82,7 @@ void find_p()
 		srand(time(NULL));
 		index = rand() % 15;
 		direction = rand() % 6;
-		int dir_x[6] = {0, 1, 1, 0, -1, -1};
-		int dir_y[6] = {-1, -1, 0, 1, 1, 0};
+
 
 		find_pos.x = (pos[index].x + dir_x[direction]);
 		find_pos.y = (pos[index].y + dir_y[direction]);
@@ -96,9 +97,6 @@ void find_p()
 				}
 			}
 		}
-
-		
-
 	}
 }
 int distance(struct place a){
@@ -111,7 +109,9 @@ void output()
 	ofstream s1072026;
 	s1072026.open("s1072026.txt");
 	s1072026 << "1" << endl;
-	s1072026 << pos[index].x << " " << pos[index].y << endl;
-	s1072026 << fin_pos.x << " " << fin_pos.y << endl;
+	s1072026 << pos[fin_index].x << " " << pos[fin_index].y << endl;
+	find_pos.x = (pos[fin_index].x + dir_x[fin_dir]);
+	find_pos.y = (pos[fin_index].y + dir_y[fin_dir]);
+	s1072026 << find_pos.x << " " << find_pos.y << endl;
 	s1072026.close();
 }
