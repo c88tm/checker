@@ -82,11 +82,8 @@ void find_p()
 		srand(time(NULL));
 		index = rand() % 15;
 		direction = rand() % 6;
-
-
 		find_pos.x = (pos[index].x + dir_x[direction]);
 		find_pos.y = (pos[index].y + dir_y[direction]);
-
 		if(find_pos.x >= 0 && find_pos.x < 17 && find_pos.y >= 0 && find_pos.y < 17 ){
 			if(b[find_pos.x][find_pos.y] == 1){ // score 用來紀錄走法的好壞，每一次都要比遠始位置更靠近終點
 				score = distance(pos[index]) - distance(find_pos);
